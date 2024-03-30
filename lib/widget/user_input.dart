@@ -40,7 +40,7 @@ class _UserInputState extends State<UserInput> {
                       Color? inputTextColor;
                       if (isOperator(e)) {
                         inputTextColor = Colors.amber;
-                      } else if (isaNumber(e)) {
+                      } else if (isANumber(e)) {
                         inputTextColor = Colors.white;
                       } else if (e == ".") {
                         inputTextColor = Colors.pink[100];

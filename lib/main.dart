@@ -22,6 +22,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -45,7 +46,7 @@ class _MyHomePageState extends State<MyHomePage> {
     "C",
     "DEL",
     "%",
-    "/",
+    "÷",
     "7",
     "8",
     "9",
@@ -60,13 +61,15 @@ class _MyHomePageState extends State<MyHomePage> {
     "+",
     "0",
     ".",
-    "ANS",
+    "( )",
     "=",
   ];
 
   String userQuestion = "", answer = "";
   dynamic buttonColoration, buttonTextColor;
   bool ableDot = true;
+  bool openParenthesis = true;
+  int openedParenthesis = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +91,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 String currentButton = buttons[index];
 
                 //Clear button conditions
-                if (index == 0) {
+                if (currentButton == "C") {
                   buttonColoration = Colors.white10;
                   buttonTextColor = Colors.red;
                   return Button(
@@ -96,6 +99,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     textColor: buttonTextColor,
                     buttonText: currentButton,
                     buttonTapped: () {
+                      openParenthesis = true; // allows parenthesis
+                      openedParenthesis = 0;
                       setState(() {
                         userQuestion = "";
                         answer = "";
@@ -106,7 +111,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 }
 
                 //Delete button conditions
-                else if (index == 1) {
+                else if (currentButton == "DEL") {
                   buttonColoration = Colors.red;
                   buttonTextColor = Colors.white;
                   return Button(
@@ -115,24 +120,65 @@ class _MyHomePageState extends State<MyHomePage> {
                     buttonText: currentButton,
                     buttonTapped: () {
                       setState(() {
-                        if (userQuestion[userQuestion.length - 1] == ".") {
+                        if (userQuestion.isNotEmpty &&
+                            userQuestion[userQuestion.length - 1] == '(') {
+                          openParenthesis = true; // allows parenthesis
+                          openedParenthesis--;
+                          debugPrint(" parenthesis $openParenthesis");
+                          debugPrint(" openedParenthesis $openedParenthesis");
+                        } else if (userQuestion.isNotEmpty &&
+                            userQuestion[userQuestion.length - 1] == ')') {
+                          openParenthesis = true; // allows parenthesis
+                          openedParenthesis++;
+                          debugPrint(" parenthesis $openParenthesis");
+                          debugPrint(" openedParenthesis $openedParenthesis");
+                        }
+                        if (userQuestion.isNotEmpty &&
+                            userQuestion[userQuestion.length - 1] == ".") {
                           ableDot = true;
                         }
+                        //checking each previous term
+                        if (userQuestion.isNotEmpty &&
+                            isOperator(userQuestion[userQuestion.length - 1])) {
+                          for (int index = userQuestion.length - 2;
+                              userQuestion.isNotEmpty &&
+                                  index > 0 &&
+                                  userQuestion[index] != '.' &&
+                                  !isOperator(userQuestion[index]);
+                              index--) {
+                            if (userQuestion[index - 1] == ".") {
+                              ableDot = false;
+                            } else if (isOperator(userQuestion[index - 1])) {
+                              ableDot = true;
+                            }
+                            debugPrint(
+                                userQuestion[index]); // print each element
+                          }
+                        }
                         if (userQuestion.isNotEmpty) {
+                          debugPrint(
+                              "deleted at index ${userQuestion.length - 1} value ${userQuestion[userQuestion.length - 1]} "); //print deleted
                           userQuestion = userQuestion.substring(
                               0, userQuestion.length - 1);
                           answer = "";
 
-                          //returns answer if last element is not an operator
+                          //returns answer if last element is not an operator or a  parenthesis
                           if (userQuestion
                                   .split('')
                                   .any((element) => isOperator(element)) &&
                               !isOperator(
                                   userQuestion[userQuestion.length - 1]) &&
-                              userQuestion[userQuestion.length - 1] != '.') {
+                              userQuestion[userQuestion.length - 1] != '.' &&
+                              userQuestion[userQuestion.length - 1] != '(' &&
+                              userQuestion[userQuestion.length - 1] != ')' &&
+                              !openParenthesis &&
+                              openedParenthesis == 0) {
                             userQuestion = userQuestion.replaceAll("×", "*");
+                            userQuestion = userQuestion.replaceAll("÷", "/");
 
                             Parser p = Parser();
+
+                            //error : must check any opened parenthesis (done)
                             Expression exp = p.parse(userQuestion);
                             ContextModel cm = ContextModel();
                             double eval = exp.evaluate(EvaluationType.REAL, cm);
@@ -147,6 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               debugPrint("decimal number");
                             }
                             userQuestion = userQuestion.replaceAll("*", "×");
+                            userQuestion = userQuestion.replaceAll("/", "÷");
                           }
                         }
                       });
@@ -177,8 +224,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             userQuestion += "0"; // returns "operator" + "0"
                           }
                         }
-                        userQuestion = userQuestion.replaceAll("×", "*");
 
+                        openParenthesis = true; // allows parenthesis
+                        openedParenthesis = 0;
+
+                        userQuestion = userQuestion.replaceAll("×", "*");
+                        userQuestion = userQuestion.replaceAll("÷", "/");
                         Parser p = Parser();
                         Expression exp = p.parse(userQuestion);
                         ContextModel cm = ContextModel();
@@ -227,7 +278,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       });
                 }
 
-                //ANS button conditions
+                //parentheses button conditions
                 else if (index == buttons.length - 2) {
                   buttonColoration = Colors.white10;
                   buttonTextColor = Colors.amber;
@@ -236,11 +287,80 @@ class _MyHomePageState extends State<MyHomePage> {
                     textColor: buttonTextColor,
                     buttonText: currentButton,
                     buttonTapped: () {
-                      if (answer.isNotEmpty) {
-                        setState(() {
-                          userQuestion = answer;
-                          answer = "";
-                        });
+                      if (currentButton == "()") {
+                        if (userQuestion.isNotEmpty &&
+                            isANumber(userQuestion[userQuestion.length - 1]) &&
+                            openedParenthesis == 0) {
+                          setState(() {
+                            userQuestion += '×(';
+                            openParenthesis = true;
+
+                            openedParenthesis++;
+                            debugPrint(" parenthesis $openParenthesis");
+                            debugPrint(" openedParenthesis $openedParenthesis");
+                          });
+                        } else if (userQuestion.isNotEmpty &&
+                            userQuestion[userQuestion.length - 1] == "(") {
+                          setState(() {
+                            userQuestion += '(';
+                            openParenthesis = true;
+                            openedParenthesis++;
+                            debugPrint(" parenthesis $openParenthesis");
+                            debugPrint(" openedParenthesis $openedParenthesis");
+                          });
+                        } else if (userQuestion.isNotEmpty &&
+                            isOperator(userQuestion[userQuestion.length - 1])) {
+                          setState(() {
+                            userQuestion += '(';
+                            openParenthesis = true;
+
+                            openedParenthesis++;
+                            debugPrint(" parenthesis $openParenthesis");
+                            debugPrint(" openedParenthesis $openedParenthesis");
+                          });
+                        } else if (userQuestion.isEmpty && openParenthesis) {
+                          setState(() {
+                            userQuestion += '(';
+                            openParenthesis = true;
+
+                            openedParenthesis++;
+                            debugPrint(" parenthesis $openParenthesis");
+                            debugPrint(" openedParenthesis $openedParenthesis");
+                          });
+                        } else if (!openParenthesis && openedParenthesis != 0) {
+                          setState(() {
+                            userQuestion += ')';
+                            openParenthesis = true;
+
+                            openedParenthesis--;
+                            debugPrint(" parenthesis $openParenthesis");
+                            debugPrint(" openedParenthesis $openedParenthesis");
+                          });
+                        } else if (userQuestion[userQuestion.length - 1] ==
+                                ")" &&
+                            openParenthesis == true &&
+                            openedParenthesis != 0) {
+                          setState(() {
+                            userQuestion += ')';
+                            openParenthesis = true;
+
+                            openedParenthesis--;
+                            debugPrint(" parenthesis $openParenthesis");
+                            debugPrint(" openedParenthesis $openedParenthesis");
+                          });
+                        } else if (userQuestion[userQuestion.length - 1] ==
+                                ")" &&
+                            openParenthesis == true &&
+                            openedParenthesis == 0) {
+                          setState(() {
+                            userQuestion += '×(';
+                            openParenthesis = true;
+
+                            openedParenthesis++;
+                            debugPrint(" parenthesis $openParenthesis");
+                            debugPrint(" openedParenthesis $openedParenthesis");
+                          });
+                        }
                       }
                     },
                   );
@@ -267,11 +387,8 @@ class _MyHomePageState extends State<MyHomePage> {
                       if (!isOperator(currentButton)) {
                         setState(() {
                           userQuestion += currentButton;
-
-                          // List<String> split = userQuestion.split('');
-                          // for (var i = 0; i < split.length; i++) {
-                          //   debugPrint("$i => ${split[i]}");
-                          // }
+                          openParenthesis = false;
+                          print("$openParenthesis");
 
                           if (
                               //if userQuestion contains an operator
@@ -279,11 +396,16 @@ class _MyHomePageState extends State<MyHomePage> {
                                       .split('')
                                       .any((element) => isOperator(element)) &&
                                   userQuestion[userQuestion.length - 1] !=
-                                      '.') {
+                                      '.' &&
+                                  openedParenthesis == 0) {
                             // equals method
 
                             userQuestion = userQuestion.replaceAll("×", "*");
+                            userQuestion = userQuestion.replaceAll("÷", "/");
+
                             Parser p = Parser();
+//number after parenthesis x number
+//last element ")" run equals method
                             Expression exp = p.parse(userQuestion);
                             ContextModel cm = ContextModel();
                             double eval = exp.evaluate(EvaluationType.REAL, cm);
@@ -298,6 +420,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               debugPrint("decimal number");
                             }
                             userQuestion = userQuestion.replaceAll("*", "×");
+                            userQuestion = userQuestion.replaceAll("/", "÷");
                           }
                         });
                       }
@@ -314,16 +437,16 @@ class _MyHomePageState extends State<MyHomePage> {
                       //replace the last operator by the new one
                       else if (isOperator(currentButton) &&
                           userQuestion.isNotEmpty &&
-                          isOperator(userQuestion[userQuestion.length - 1]) &&
-                          userQuestion[0] != '-') {
-                        setState(() {
-                          //call delete function and add the current button
-                          if (userQuestion.isNotEmpty) {
+                          isOperator(userQuestion[userQuestion.length - 1])) {
+                        if (userQuestion.length > 1) {
+                          setState(() {
+                            //call delete function and add the current button
+
                             userQuestion = userQuestion.substring(
                                 0, userQuestion.length - 1);
                             userQuestion += currentButton;
-                          }
-                        });
+                          });
+                        }
                       }
                       //  "-" operator
                       if (currentButton == "-" && userQuestion.isEmpty) {
@@ -333,6 +456,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       }
                       //clear onPressing operator
                       if (isOperator(currentButton)) {
+                        openParenthesis = true;
                         answer = "";
                         if (userQuestion.isEmpty ||
                             isOperator(userQuestion[userQuestion.length - 1])) {

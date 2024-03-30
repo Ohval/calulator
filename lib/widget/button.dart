@@ -6,7 +6,7 @@ class Button extends StatefulWidget {
   final dynamic coloration;
   final dynamic textColor;
   final String buttonText;
-  final dynamic buttonTapped;
+  final void Function()? buttonTapped;
   final double? fontSize;
   const Button(
       {super.key,
@@ -27,7 +27,8 @@ class _ButtonState extends State<Button> {
       onTap: widget.buttonTapped,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 144),
           decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               color: widget.coloration),

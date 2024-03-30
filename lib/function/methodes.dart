@@ -1,12 +1,12 @@
 bool isOperator(String x) {
-  if (x == "%" || x == "/" || x == "×" || x == "-" || x == "+" || x == "=") {
+  if (x == "%" || x == "÷" || x == "×" || x == "-" || x == "+" || x == "=") {
     return true;
   } else {
     return false;
   }
 }
 
-bool isaNumber(String x) {
+bool isANumber(String x) {
   if (x == "0" ||
       x == "1" ||
       x == "2" ||
