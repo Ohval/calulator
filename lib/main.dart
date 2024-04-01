@@ -287,7 +287,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     textColor: buttonTextColor,
                     buttonText: currentButton,
                     buttonTapped: () {
-                      if (currentButton == "()") {
+                      if (currentButton == "( )") {
                         if (userQuestion.isNotEmpty &&
                             isANumber(userQuestion[userQuestion.length - 1]) &&
                             openedParenthesis == 0) {
