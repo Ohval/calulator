@@ -1,13 +1,12 @@
-// ignore_for_file: file_names
-
+import 'package:calc_x/theme/layout/extention.dart';
 import 'package:flutter/material.dart';
 
-class Button extends StatefulWidget {
-  final dynamic coloration;
-  final dynamic textColor;
+class Button extends StatelessWidget {
+  final dynamic coloration, textColor;
   final String buttonText;
-  final void Function()? buttonTapped;
+  final Function buttonTapped;
   final double? fontSize;
+
   const Button(
       {super.key,
       required this.coloration,
@@ -15,32 +14,18 @@ class Button extends StatefulWidget {
       required this.buttonText,
       required this.buttonTapped,
       this.fontSize});
-
-  @override
-  State<Button> createState() => _ButtonState();
-}
-
-class _ButtonState extends State<Button> {
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.buttonTapped,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 144),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              color: widget.coloration),
-          child: Center(
-            child: Text(
-              widget.buttonText,
-              style: TextStyle(
-                  color: widget.textColor, fontSize: widget.fontSize ?? 27),
-            ),
-          ),
+    BorderRadius borderRad = BorderRadius.circular(20);
+    return Container(
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20), color: coloration),
+      child: Center(
+        child: Text(
+          buttonText,
+          style: TextStyle(color: textColor, fontSize: fontSize ?? 27),
         ),
       ),
-    );
+    ).ripple(buttonTapped, borderRadius: borderRad).p(8);
   }
 }

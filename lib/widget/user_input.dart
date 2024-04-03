@@ -44,6 +44,10 @@ class _UserInputState extends State<UserInput> {
                         inputTextColor = Colors.white;
                       } else if (e == ".") {
                         inputTextColor = Colors.pink[100];
+                      } else if (e == "(") {
+                        inputTextColor = Colors.pink[100];
+                      } else if (e == ")") {
+                        inputTextColor = Colors.pink[100];
                       }
                       return TextSpan(
                           text: e,

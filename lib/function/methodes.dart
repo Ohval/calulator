@@ -6,6 +6,14 @@ bool isOperator(String x) {
   }
 }
 
+bool isCurvedBrace(String x) {
+  if (x == "(" || x == ")") {
+    return true;
+  } else {
+    return false;
+  }
+}
+
 bool isANumber(String x) {
   if (x == "0" ||
       x == "1" ||

@@ -213,7 +213,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     buttonText: currentButton,
                     buttonTapped: () {
                       if (userQuestion.isNotEmpty &&
-                          !isOperator(userQuestion[userQuestion.length - 1])) {
+                          !isOperator(userQuestion[userQuestion.length - 1]) &&
+                          openedParenthesis == 0) {
                         //if it ends with {"operator" + "dot"}
                         if (userQuestion[userQuestion.length - 1] == '.') {
                           if (userQuestion.length == 1 ||
@@ -281,7 +282,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 //parentheses button conditions
                 else if (index == buttons.length - 2) {
                   buttonColoration = Colors.white10;
-                  buttonTextColor = Colors.amber;
+                  buttonTextColor = Colors.pink[100];
+
                   return Button(
                     coloration: buttonColoration,
                     textColor: buttonTextColor,
@@ -385,42 +387,56 @@ class _MyHomePageState extends State<MyHomePage> {
                     buttonTapped: () {
                       //  numbers conditions
                       if (!isOperator(currentButton)) {
+                        //add the current button
                         setState(() {
-                          userQuestion += currentButton;
-                          openParenthesis = false;
-                          print("$openParenthesis");
+                          // after a closed parenthesis return "×(currentNumber)"
+                          if (userQuestion.isNotEmpty &&
+                              userQuestion[userQuestion.length - 1] == ")") {
+                            userQuestion += "×$currentButton";
+                            openParenthesis = false;
+                            print(" open parenthesis $openParenthesis");
+                          }
+                          //otherwise return the add currentButton
+                          else {
+                            userQuestion += currentButton;
+                            openParenthesis = false;
+                            print(" open parenthesis $openParenthesis");
+                          }
 
-                          if (
-                              //if userQuestion contains an operator
-                              userQuestion
-                                      .split('')
-                                      .any((element) => isOperator(element)) &&
-                                  userQuestion[userQuestion.length - 1] !=
-                                      '.' &&
-                                  openedParenthesis == 0) {
-                            // equals method
-
-                            userQuestion = userQuestion.replaceAll("×", "*");
-                            userQuestion = userQuestion.replaceAll("÷", "/");
-
-                            Parser p = Parser();
-//number after parenthesis x number
+                          //if userQuestion contains an operator
+                          if (userQuestion
+                                  .split('')
+                                  .any((element) => isOperator(element)) &&
+                              userQuestion[userQuestion.length - 1] != '.' &&
+                              openedParenthesis == 0) {
+                            if (userQuestion[userQuestion.length - 1] ==
+                                    ")" || //not valid must delete ")"
+                                isANumber(
+                                    userQuestion[userQuestion.length - 1])) {
+                              // equals method
+                              userQuestion = userQuestion.replaceAll("×", "*");
+                              userQuestion = userQuestion.replaceAll("÷", "/");
+//only + or - after an opened parenthesis
 //last element ")" run equals method
-                            Expression exp = p.parse(userQuestion);
-                            ContextModel cm = ContextModel();
-                            double eval = exp.evaluate(EvaluationType.REAL, cm);
-                            final String finalAnswer = eval.toString();
+                              Parser p = Parser();
+                              Expression exp = p.parse(userQuestion);
+                              ContextModel cm = ContextModel();
+                              double eval =
+                                  exp.evaluate(EvaluationType.REAL, cm);
+                              final String finalAnswer = eval.toString();
 
-                            if (finalAnswer.endsWith(".0")) {
-                              answer = finalAnswer.substring(
-                                  0, finalAnswer.length - 2);
-                              debugPrint("whole number");
-                            } else {
-                              answer = finalAnswer;
-                              debugPrint("decimal number");
+                              //if it ends with .0
+                              if (finalAnswer.endsWith(".0")) {
+                                answer = finalAnswer.substring(
+                                    0, finalAnswer.length - 2);
+                                debugPrint("whole number");
+                              } else {
+                                answer = finalAnswer;
+                                debugPrint("decimal number");
+                              }
+                              userQuestion = userQuestion.replaceAll("*", "×");
+                              userQuestion = userQuestion.replaceAll("/", "÷");
                             }
-                            userQuestion = userQuestion.replaceAll("*", "×");
-                            userQuestion = userQuestion.replaceAll("/", "÷");
                           }
                         });
                       }
@@ -454,7 +470,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           userQuestion += currentButton;
                         });
                       }
-                      //clear onPressing operator
+                      //clear answer onPressing an operator
                       if (isOperator(currentButton)) {
                         openParenthesis = true;
                         answer = "";
